@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  conversor-docx-html:
+    build: .
+    container_name: conversor-docx-html
+    restart: always
+    ports:
+      - "8501:8501"
+    networks:
+      - rede-proxy
+
+networks:
+  rede-proxy:
+    external: true

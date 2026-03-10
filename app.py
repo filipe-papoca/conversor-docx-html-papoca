@@ -65,6 +65,8 @@ def ajustar_html_para_papoca(html: str) -> str:
         flags=re.DOTALL,
     )
 
+    html = re.sub(r"<h([1-3])[^>]*>\s*</h\1>", "", html, flags=re.DOTALL)
+
     html = re.sub(
         r"<strong>\s*(<a[^>]*>.*?</a>)\s*</strong>",
         r"\1",
@@ -77,6 +79,9 @@ def ajustar_html_para_papoca(html: str) -> str:
         html,
         flags=re.DOTALL,
     )
+
+    html = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html)
+    html = re.sub(r"_([^_<>]+)_", r"<em>\1</em>", html)
 
     def adicionar_target(match: re.Match) -> str:
         atributos = match.group(1)

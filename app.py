@@ -1,13 +1,13 @@
-import streamlit as st
+import re
+
 import mammoth
+import streamlit as st
 
 
 st.set_page_config(page_title="Conversor DOCX → HTML", page_icon="🚀")
 
-# ---------------------------------------------------
-# Estilo (CSS)
-# ---------------------------------------------------
-st.markdown("""
+st.markdown(
+    """
 <style>
 .stApp {
     background-color: #091424 !important;
@@ -48,21 +48,58 @@ textarea {
     color: #FFFFFF !important;
 }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-# ---------------------------------------------------
-# Função de conversão
-# ---------------------------------------------------
+
+def ajustar_html_para_papoca(html: str) -> str:
+    html = re.sub(r"<h1>(.*?)</h1>", r'<h1 class="h1style">\1</h1>', html, flags=re.DOTALL)
+    html = re.sub(r"<h2>(.*?)</h2>", r'<h2 class="h2style">\1</h2>', html, flags=re.DOTALL)
+    html = re.sub(r"<h3>(.*?)</h3>", r'<h3 class="h3style">\1</h3>', html, flags=re.DOTALL)
+
+    html = re.sub(
+        r'<a(?=[^>]*\sid="[^"]+")(?![^>]*\shref=)[^>]*>.*?</a>',
+        "",
+        html,
+        flags=re.DOTALL,
+    )
+
+    html = re.sub(
+        r"<strong>\s*(<a[^>]*>.*?</a>)\s*</strong>",
+        r"\1",
+        html,
+        flags=re.DOTALL,
+    )
+    html = re.sub(
+        r"<a([^>]*)>\s*<strong>(.*?)</strong>\s*</a>",
+        r"<a\1>\2</a>",
+        html,
+        flags=re.DOTALL,
+    )
+
+    def adicionar_target(match: re.Match) -> str:
+        atributos = match.group(1)
+        if "target=" in atributos:
+            return match.group(0)
+        return f'<a{atributos} target="_blank">'
+
+    html = re.sub(r"<a([^>]*)>", adicionar_target, html)
+
+    return html
+
+
 def converter_docx_para_html(arquivo_docx):
     arquivo_docx.seek(0)
     resultado = mammoth.convert_to_html(arquivo_docx)
-    return resultado.value, resultado.messages
+    html_ajustado = ajustar_html_para_papoca(resultado.value)
+    return html_ajustado, resultado.messages
 
-# ---------------------------------------------------
-# App Principal
-# ---------------------------------------------------
+
 st.title("🚀 Conversor de Word (.docx) para HTML - PAPOCA")
-st.write("Envie um arquivo **.docx** e copie o código HTML gerado para usar no WordPress.")
+st.write(
+    "Envie um arquivo **.docx** e copie o código HTML gerado para usar no WordPress."
+)
 
 uploaded_file = st.file_uploader("Escolha um arquivo .docx", type=["docx"])
 
